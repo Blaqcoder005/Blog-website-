@@ -25,16 +25,23 @@ def get_posts():
     return response.data
 
 # GET single post
-@router.get("/posts/{id}")
-def get_post(id: int):
-    response = supabase.table("posts").select("*").eq("id", id).execute()
-    return response.data
+@router.get("/posts/{slug}")
+def get_post(slug: str):
+    response = supabase.table("posts") \
+        .select("*") \
+        .eq("slug", slug) \
+        .execute()
 
-@router.patch("/posts/{id}")
-def update_post(id: int, post: PostUpdate):
+    if not response.data:
+        return {"error": "Post not found"}
+
+    return response.data[0]
+
+@router.patch("/posts/{title}")
+def update_post(title: str, post: PostUpdate):
     data = post.dict(exclude_unset=True)
 
-    response = supabase.table("posts").update(data).eq("id", id).execute()
+    response = supabase.table("posts").update(data).eq("title", title).execute()
 
     if not response.data:
         raise HTTPException(status_code=404, detail="Post not found")
