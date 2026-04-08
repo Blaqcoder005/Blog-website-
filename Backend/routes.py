@@ -1,58 +1,12 @@
-<<<<<<< HEAD
-from fastapi import APIRouter, Form, UploadFile, Depends, HTTPException
-from fastapi.responses import RedirectResponse
-from config import supabase
-from schema import PostCreate, PostUpdate
-import datetime
-
-router = APIRouter(tags=["routes"])
-
-@router.post("/create")
-def create_post(post: PostCreate):
-    id = user[id]
-    if not id:
-        return RedirectResponse("/login")
-
-    new_post = {"title": title, "content": content}
-
-    supabase.table("content").insert(new_post).execute()
-
-    return new_post.data
-
-# GET all posts
-@router.get("/posts")
-def get_posts():
-    response = supabase.table("posts").select("*").execute()
-    return response.data
-
-# GET single post
-@router.get("/posts/{id}")
-def get_post(id: int):
-    response = supabase.table("posts").select("*").eq("id", id).execute()
-    return response.data
-
-@router.patch("/posts/{id}")
-def update_post(id: int, post: PostUpdate):
-    data = post.dict(exclude_unset=True)
-
-    response = supabase.table("posts").update(data).eq("id", id).execute()
-
-    if not response.data:
-        raise HTTPException(status_code=404, detail="Post not found")
-
-    return response.data[0]
-
-=======
 import re
 from datetime import datetime, timedelta, timezone
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy import select
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -80,11 +34,11 @@ pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_PREFIX}/auth/token")
 
 
-def verify_password(plain, hashed):
+def verify_password(plain: str, hashed: str) -> bool:
     return pwd_context.verify(plain, hashed)
 
 
-def get_password_hash(password):
+def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
@@ -93,7 +47,9 @@ def slugify(value: str) -> str:
     return slug[:255] or "post"
 
 
-async def generate_unique_slug(db: AsyncSession, title: str, *, exclude_post_id: int | None = None) -> str:
+async def generate_unique_slug(
+    db: AsyncSession, title: str, *, exclude_post_id: int | None = None
+) -> str:
     base_slug = slugify(title)
     slug = base_slug
     counter = 2
@@ -162,12 +118,12 @@ async def get_comments_for_post(db: AsyncSession, post_id: int) -> List[Comment]
     return result.scalars().all()
 
 
-async def get_user_by_email(db, email):
+async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
     result = await db.execute(select(User).where(User.email == email))
     return result.scalar_one_or_none()
 
 
-async def create_user(db, user):
+async def create_user(db: AsyncSession, user: UserCreate) -> User:
     db_user = User(
         email=user.email,
         username=user.username,
@@ -181,14 +137,14 @@ async def create_user(db, user):
     return db_user
 
 
-async def authenticate_user(db, email, password):
+async def authenticate_user(db: AsyncSession, email: str, password: str) -> User | None:
     user = await get_user_by_email(db, email)
     if not user or not verify_password(password, user.hashed_password):
         return None
     return user
 
 
-def create_access_token(data: dict, expires_delta=None):
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=15))
     to_encode.update({"exp": expire})
@@ -197,15 +153,15 @@ def create_access_token(data: dict, expires_delta=None):
 
 async def get_current_user(
     db: AsyncSession = Depends(get_db),
-    token: str = Depends(oauth2_scheme)
-):
+    token: str = Depends(oauth2_scheme),
+) -> User:
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         email = payload.get("sub")
         if not email:
             raise HTTPException(status_code=401, detail="Invalid token")
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    except JWTError as exc:
+        raise HTTPException(status_code=401, detail="Invalid token") from exc
 
     user = await get_user_by_email(db, email)
     if not user:
@@ -214,17 +170,16 @@ async def get_current_user(
     return user
 
 
-async def get_current_admin_user(user: User = Depends(get_current_user)):
+async def get_current_admin_user(user: User = Depends(get_current_user)) -> User:
     if not user.is_admin:
         raise HTTPException(status_code=403, detail="Admin required")
     return user
 
 
-# AUTH
 @router.post("/auth/register", response_model=UserRead)
 async def register(user: UserCreate, db: AsyncSession = Depends(get_db)):
     if await get_user_by_email(db, user.email):
-        raise HTTPException(400, "Email exists")
+        raise HTTPException(status_code=400, detail="Email exists")
     return await create_user(db, user)
 
 
@@ -232,17 +187,16 @@ async def register(user: UserCreate, db: AsyncSession = Depends(get_db)):
 async def login(form: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):
     user = await authenticate_user(db, form.username, form.password)
     if not user:
-        raise HTTPException(401, "Invalid credentials")
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
     token = create_access_token(
         {"sub": user.email},
-        timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
     )
 
     return {"access_token": token, "token_type": "bearer", "user": user}
 
 
-# POSTS
 @router.get("/posts", response_model=List[PostRead])
 async def get_posts(db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
     result = await db.execute(
@@ -266,7 +220,11 @@ async def get_post(post_id: int, db: AsyncSession = Depends(get_db), user: User 
 
 
 @router.post("/posts", response_model=PostRead)
-async def create_post(post: PostCreate, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_admin_user)):
+async def create_post(
+    post: PostCreate,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_admin_user),
+):
     categories = await fetch_categories_by_ids(db, post.category_ids)
     tags = await fetch_tags_by_ids(db, post.tag_ids)
     slug = await generate_unique_slug(db, post.title)
@@ -287,7 +245,12 @@ async def create_post(post: PostCreate, db: AsyncSession = Depends(get_db), user
 
 
 @router.put("/posts/{post_id}", response_model=PostRead)
-async def update_post(post_id: int, post: PostUpdate, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_admin_user)):
+async def update_post(
+    post_id: int,
+    post: PostUpdate,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_admin_user),
+):
     db_post = await get_post_by_id(db, post_id)
     if not db_post:
         raise HTTPException(status_code=404, detail="Post not found")
@@ -311,7 +274,11 @@ async def update_post(post_id: int, post: PostUpdate, db: AsyncSession = Depends
 
 
 @router.delete("/posts/{post_id}", status_code=204)
-async def delete_post(post_id: int, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_admin_user)):
+async def delete_post(
+    post_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_admin_user),
+):
     result = await db.execute(select(Post).where(Post.id == post_id))
     db_post = result.scalar_one_or_none()
     if not db_post:
@@ -322,15 +289,22 @@ async def delete_post(post_id: int, db: AsyncSession = Depends(get_db), user: Us
     return None
 
 
-# COMMENTS
 @router.get("/posts/{post_id}/comments", response_model=List[CommentRead])
-async def get_comments(post_id: int, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
+async def get_comments(
+    post_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
     return await get_comments_for_post(db, post_id)
 
 
 @router.post("/posts/{post_id}/comments", response_model=CommentRead)
-async def create_comment(post_id: int, comment: CommentCreate, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
-    # Verify post exists
+async def create_comment(
+    post_id: int,
+    comment: CommentCreate,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
     result = await db.execute(select(Post).where(Post.id == post_id))
     db_post = result.scalar_one_or_none()
     if not db_post:
@@ -348,7 +322,7 @@ async def create_comment(post_id: int, comment: CommentCreate, db: AsyncSession 
         content=comment.content,
         author_id=user.id,
         post_id=post_id,
-        parent_comment_id=comment.parent_comment_id
+        parent_comment_id=comment.parent_comment_id,
     )
 
     db.add(db_comment)
@@ -360,4 +334,3 @@ async def create_comment(post_id: int, comment: CommentCreate, db: AsyncSession 
         .where(Comment.id == db_comment.id)
     )
     return result.scalar_one()
->>>>>>> 3c24d33 (initial commit)

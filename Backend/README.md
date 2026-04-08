@@ -87,6 +87,14 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
+`requirements.txt` includes `email-validator`, which is required for Pydantic `EmailStr` validation on the auth models.
+
+If you ever install packages manually or repair a broken environment, make sure it is present:
+
+```bash
+pip install email-validator
+```
+
 ### 3. Configure Environment
 
 Copy the example environment file and update with your values:
@@ -118,7 +126,23 @@ ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
 DATABASE_ECHO=false
 ```
 
-### 4. Run the Application
+### 4. Verify the Installation
+
+Run a quick import check before starting the server:
+
+```bash
+python -c "import main; print(main.app.title)"
+```
+
+Expected output:
+
+```text
+Blog API
+```
+
+If this step passes, your dependencies, environment variables, and `email-validator` setup are all loading correctly.
+
+### 5. Run the Application
 
 ```bash
 uvicorn main:app --reload
@@ -126,9 +150,88 @@ uvicorn main:app --reload
 
 The server will start at http://localhost:8000
 
-### 5. Access API Documentation
+### 6. Access API Documentation
 
 Open your browser and navigate to: http://localhost:8000/docs
+
+## Interactive Terminal Client
+
+You can test the API manually from the terminal with the interactive client:
+
+```bash
+python interactive_api_client.py
+```
+
+By default it targets `http://127.0.0.1:8000`. To use a different server:
+
+```bash
+python interactive_api_client.py --base-url http://127.0.0.1:8001
+```
+
+### Example: Register a User
+
+```text
+api> POST /api/v1/auth/register
+Body type [json/form/raw/none]: json
+Paste JSON body. Type END on a new line to submit:
+{
+  "email": "reader@example.com",
+  "username": "reader1",
+  "password": "Password123!",
+  "is_active": true,
+  "is_admin": false
+}
+END
+```
+
+### Example: Login
+
+```text
+api> POST /api/v1/auth/token
+Body type [json/form/raw/none]: form
+Enter form fields as key=value. Type END on a new line to submit:
+username=reader@example.com
+password=Password123!
+END
+```
+
+### Example: Store the Returned Token
+
+After a successful login, load the `access_token` from the last response:
+
+```text
+api> use-token
+```
+
+You can also set a token manually:
+
+```text
+api> token YOUR_JWT_TOKEN_HERE
+```
+
+### Example: Send a Protected Request
+
+Once a token is set, you can call protected endpoints directly:
+
+```text
+api> GET /api/v1/posts
+```
+
+To create a protected admin-only post:
+
+```text
+api> POST /api/v1/posts
+Body type [json/form/raw/none]: json
+Paste JSON body. Type END on a new line to submit:
+{
+  "title": "My First Terminal Post",
+  "content": "Created from the interactive API client.",
+  "is_published": true,
+  "category_ids": [],
+  "tag_ids": []
+}
+END
+```
 
 ## Local Testing Guide
 
