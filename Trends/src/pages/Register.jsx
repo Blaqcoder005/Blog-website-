@@ -1,8 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import "../styles/global.css";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-
 
 export default function Register() {
   const [username, setUsername] = useState("");
@@ -10,6 +8,7 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8000";
 
   const navigate = useNavigate();
   const { checkAuth } = useAuth();
@@ -25,15 +24,15 @@ export default function Register() {
       formData.append("email", email);
       formData.append("password", password);
 
-      const res = await fetch("http://localhost:8000/register", {
+      const res = await fetch(`${API_BASE}/register`, {
         method: "POST",
         body: formData,
         credentials: "include",
       });
-      console.log(formData)
+
       if (res.ok) {
-        await checkAuth();          // sync frontend with backend
-        navigate("/login");     // redirect to login-page
+        await checkAuth();
+        navigate("/login");
         return;
       }
 
@@ -67,7 +66,6 @@ export default function Register() {
           required
         />
 
-
         <input
           type="email"
           placeholder="Email"
@@ -87,6 +85,7 @@ export default function Register() {
         <button type="submit" disabled={loading} className="btn btn-primary">
           {loading ? "Submitting…" : "Register"}
         </button>
+        <p>Already have an account? <Link to="/login">Login</Link></p>
       </form>
     </div>
   );

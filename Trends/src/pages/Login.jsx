@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link, Outlet } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import "../styles/global.css";
 import { useAuth } from "../context/AuthContext";
 
@@ -9,9 +9,9 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
+  const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8000";
   const navigate = useNavigate();
-  const { checkAuth } = useAuth(); //talks to the server
+  const { checkAuth } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,15 +24,15 @@ export default function Login() {
       formData.append("email", email);
       formData.append("password", password);
 
-      const res = await fetch("http://localhost:8000/login", {
+      const res = await fetch(`${API_BASE}/login`, {
         method: "POST",
         body: formData,
         credentials: "include",
       });
 
       if (res.ok) {
-        await checkAuth();          //  sync frontend with backend
-        navigate("/");     //  now ProtectedRoute passes
+        await checkAuth();
+        navigate("/");
         return;
       }
 
@@ -66,7 +66,6 @@ export default function Login() {
           required
         />
 
-
         <input
           type="email"
           placeholder="Email"
@@ -86,7 +85,7 @@ export default function Login() {
         <button type="submit" disabled={loading} className="btn btn-primary">
           {loading ? "Logging in…" : "Login"}
         </button>
-        <p> Don't have an account? Sign up <Link to="/register">here</Link></p>
+        <p>Don't have an account? Sign up <Link to="/register">here</Link></p>
       </form>
     </div>
   );

@@ -8,15 +8,23 @@ function Post() {
   const { slug } = useParams();
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
+  const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8000";
+
+  const fetchComments = () => {
+    axios.get(`${API_BASE}/comments/${slug}`)
+      .then(res => {
+        if (Array.isArray(res.data)) setComments(res.data);
+        else setComments([]);
+      })
+      .catch(err => console.log(err));
+  };
 
   useEffect(() => {
-    axios.get(`http://localhost:8000/posts/${slug}`)
+    axios.get(`${API_BASE}/posts/${slug}`)
       .then(res => setPost(res.data))
       .catch(err => console.log(err));
 
-    axios.get(`http://localhost:8000/comments/${slug}`)
-      .then(res => setComments(res.data))
-      .catch(err => console.log(err));
+    fetchComments();
   }, [slug]);
 
   if (!post) return <p>Loading...</p>;
@@ -25,12 +33,19 @@ function Post() {
   return (
     <div className="page post-page">
       <h1>{post.title}</h1>
-      <p>{post.content}</p>
 
-      <Comment slug={slug} onCommentAdded={() => {
-        axios.get(`http://localhost:8000/comments/${slug}`)
-          .then(res => setComments(res.data))
-      }} />
+      <div className="post-meta">
+        <FaRegComment />
+        <span>{comments.length} comments</span>
+      </div>
+
+      <div className="post-body">
+        {post.content.split("\n").map((para, i) => (
+          <p key={i}>{para}</p>
+        ))}
+      </div>
+
+      <Comment slug={slug} onCommentAdded={fetchComments} />
     </div>
   );
 }

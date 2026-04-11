@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import "../styles/global.css";
 
 function CreatePost() {
   const [title, setTitle] = useState("");
@@ -9,6 +8,7 @@ function CreatePost() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8000";
 
   const handleSubmit = () => {
     if (!title.trim() || !content.trim()) {
@@ -19,7 +19,7 @@ function CreatePost() {
     setLoading(true);
     setError("");
 
-    axios.post("http://localhost:8000/create",
+    axios.post(`${API_BASE}/create`,
       { title, content },
       { withCredentials: true }
     )
@@ -38,36 +38,32 @@ function CreatePost() {
   };
 
   return (
-     <div className="page create-post">
+    <div className="page create-post">
       <h2>Create Post</h2>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {error && <div className="error">{error}</div>}
 
-      <div style={{ marginBottom: "16px" }}>
+      <div className="form-group">
         <label>Title</label>
-        <br />
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Post title..."
-          style={{ width: "100%", padding: "8px", marginTop: "4px" }}
         />
       </div>
 
-      <div style={{ marginBottom: "16px" }}>
+      <div className="form-group">
         <label>Content</label>
-        <br />
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="Write your post..."
           rows={10}
-          style={{ width: "100%", padding: "8px", marginTop: "4px" }}
         />
       </div>
 
-      <button onClick={handleSubmit} disabled={loading}>
+      <button onClick={handleSubmit} disabled={loading} className="btn btn-primary">
         {loading ? "Publishing..." : "Publish Post"}
       </button>
     </div>
