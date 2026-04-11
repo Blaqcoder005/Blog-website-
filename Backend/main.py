@@ -1,6 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-<<<<<<< HEAD
 from starlette.middleware.sessions import SessionMiddleware
 
 from config import SECRET_KEY
@@ -25,64 +24,18 @@ app.add_middleware(
 )
 
 app.include_router(router)
-=======
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-from contextlib import asynccontextmanager
-
-from config import settings
-from database import engine, create_tables
-from routes import router as blog_router
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup
-    await create_tables()
-    yield
-    # Shutdown
-    await engine.dispose()
+@app.options("/{full_path:path}")
+async def options_handler(request: Request):
+    return Response(
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": "http://localhost:5173",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+            "Access-Control-Allow-Credentials": "true",
+        }
+    )
 
 
-app = FastAPI(
-    title=settings.PROJECT_NAME,
-    version=settings.VERSION,
-    description="A production-ready blog API with JWT authentication",
-    lifespan=lifespan
-)
-
-# ✅ Mount static directory
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-# ✅ Favicon route
-@app.get("/favicon.ico", include_in_schema=False)
-async def favicon():
-    return FileResponse("static/favicon.ico")
-
-
-# CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Routers
-app.include_router(blog_router)
-
-
-@app.get("/")
-async def root():
-    return {
-        "message": f"Welcome to {settings.PROJECT_NAME}",
-        "version": settings.VERSION,
-        "docs": "/docs"
-    }
-
-
-@app.get("/health")
-async def health():
-    return {"status": "healthy"}
->>>>>>> 3c24d33 (initial commit)

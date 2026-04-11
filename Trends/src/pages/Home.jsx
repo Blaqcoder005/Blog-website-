@@ -12,13 +12,15 @@ function Home() {
   }, []);
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>My Blog</h1>
-
-      {posts.map(post => (
-        <PostCard key={post.title} post={post} />
-      ))}
-    </div>
+	<div className="page">
+	  <div className="home-header">
+	    <h1>Latest Posts</h1>
+	    <p>Thoughts, ideas and stories.</p>
+	  </div>
+	  {posts.map(post => (
+	    <PostCard key={post.title} post={post} />
+	  ))}
+	</div>
   );
 }
 
