@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Form, Request, UploadFile, Depends, HTTPException
+from fastapi import APIRouter, Form, Request, UploadFile, File, Depends, HTTPException
 from fastapi.responses import RedirectResponse, HTMLResponse
 from config import supabase, hash_password, verify_password, generate_slug
 from schema import PostCreate, PostUpdate
-import datetime
+import datetime, uuid, os
 
 router = APIRouter(tags=["routes"])
 
@@ -108,15 +108,36 @@ async def login(request: Request):
     }
 
 @router.post("/create")
-async def create_post(request: Request, post: PostCreate):
+async def create_post(
+    request: Request,
+    title: str = Form(...),
+    content: str = Form(...),
+    image: UploadFile = File(None)
+):
     user_id = request.session.get("user_id")
     if not user_id:
         return RedirectResponse("/login")
 
+    image_url = None
+
+    if image and image.filename:
+        file_bytes = await image.read()
+        ext = image.filename.split(".")[-1]
+        filename = f"{uuid.uuid4()}.{ext}"
+
+        supabase.storage.from_("blog-images").upload(
+            path=filename,
+            file=file_bytes,
+            file_options={"content-type": image.content_type, "upsert": "false"}
+        )
+
+        image_url = f"{os.getenv('SUPABASE_URL')}/storage/v1/object/public/blog-images/{filename}"
+
     new_post = {
-        "title": post.title,
-        "content": post.content,
-        "slug": generate_slug(post.title)
+        "title": title,
+        "content": content,
+        "slug": generate_slug(title),
+        "image_url": image_url
     }
 
     response = supabase.table("posts").insert(new_post).execute()

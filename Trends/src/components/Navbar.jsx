@@ -5,6 +5,7 @@ function Navbar() {
     <>
       <nav className="navbar">
         <span className="navbar-brand">MyBlog</span>
+        <Link to="/">Home</Link>
         <Link to="/create">Create Post</Link>
       </nav>
       <Outlet />

@@ -5,10 +5,11 @@ import axios from "axios";
 function CreatePost() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8000";
+  const API_BASE = "http://localhost:8000";
 
   const handleSubmit = () => {
     if (!title.trim() || !content.trim()) {
@@ -19,20 +20,19 @@ function CreatePost() {
     setLoading(true);
     setError("");
 
-    axios.post(`${API_BASE}/create`,
-      { title, content },
-      { withCredentials: true }
-    )
-    .then(res => {
-      navigate(`/post/${res.data.slug}`);
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("content", content);
+    if (image) formData.append("image", image);
+
+    axios.post(`${API_BASE}/create`, formData, {
+      withCredentials: true,
+      headers: { "Content-Type": "multipart/form-data" }
     })
+    .then(res => navigate(`/post/${res.data.slug}`))
     .catch(err => {
-      if (err.response?.status === 401) {
-        navigate("/login");
-      } else {
-        setError("Failed to create post. Try again.");
-        console.log(err);
-      }
+      if (err.response?.status === 401) navigate("/login");
+      else setError("Failed to create post. Try again.");
     })
     .finally(() => setLoading(false));
   };
@@ -51,7 +51,16 @@ function CreatePost() {
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Post title..."
         />
+
+        <label>Cover Image</label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => setImage(e.target.files[0])}
+        />
       </div>
+
+
 
       <div className="form-group">
         <label>Content</label>

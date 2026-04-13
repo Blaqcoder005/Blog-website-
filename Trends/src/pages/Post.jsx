@@ -8,7 +8,7 @@ function Post() {
   const { slug } = useParams();
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
-  const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8000";
+  const API_BASE = "http://localhost:8000";
 
   const fetchComments = () => {
     axios.get(`${API_BASE}/comments/${slug}`)
@@ -32,19 +32,21 @@ function Post() {
 
   return (
     <div className="page post-page">
-      <h1>{post.title}</h1>
-
-      <div className="post-meta">
-        <FaRegComment />
-        <span>{comments.length} comments</span>
-      </div>
+       <h1>{post.title}</h1>
 
       <div className="post-body">
+       <div className="post-meta">
         {post.content.split("\n").map((para, i) => (
           <p key={i}>{para}</p>
         ))}
+       </div>
+	{post.image_url && (
+	  <img src={post.image_url} alt={post.title}
+	    style={{ width: "100%", maxHeight: "400px", objectFit: "cover", borderRadius: "12px", marginBottom: "1.5rem" }}
+	  />
+	)}
       </div>
-
+      <p>{Comment.slug}</p> 
       <Comment slug={slug} onCommentAdded={fetchComments} />
     </div>
   );

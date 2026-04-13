@@ -5,7 +5,7 @@ function Comment({ slug, onCommentAdded }) {
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(false);
-  const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8000";
+  const API_BASE =  "http://localhost:8000";
 
   useEffect(() => {
     axios.get(`${API_BASE}/comments/${slug}`)
@@ -50,7 +50,7 @@ function Comment({ slug, onCommentAdded }) {
       {comments.length > 0 ? (
         comments.map((c, i) => (
           <div key={i} className="comment-item">
-            <p>{c.comment}</p>
+            <p>{c.content}</p>
           </div>
         ))
       ) : (
