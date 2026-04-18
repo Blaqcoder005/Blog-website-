@@ -32,6 +32,7 @@ export default function Login() {
 
       if (res.ok) {
         await checkAuth();
+        console.log("API BASE:", import.meta.env.VITE_API_URL)
         console.log("Auth checked, navigating...");
         navigate("/");
         return;
