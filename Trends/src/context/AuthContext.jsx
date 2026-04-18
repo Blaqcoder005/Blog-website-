@@ -9,8 +9,9 @@ export function AuthProvider({ children }) {
   const API_BASE = import.meta.env.VITE_API_URL;
 
   const checkAuth = async () => {
+    setLoading(true); // add this line
     try {
-      const res = await apiFetch("/me" , {
+      const res = await apiFetch(`${API_BASE}/me`,      {
         credentials: "include",
       });
       const data = await res.json();
