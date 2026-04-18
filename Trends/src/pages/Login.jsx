@@ -37,6 +37,12 @@ export default function Login() {
         navigate("/");
         return;
       }
+      if (res.ok) {
+        const data = await res.json();
+        login(data.user);
+        navigate("/");
+        return;
+      } 
 
       if (res.status === 401) {
         setError("Invalid credentials");
