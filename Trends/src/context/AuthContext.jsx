@@ -13,7 +13,7 @@ export function AuthProvider({ children }) {
       const res = await apiFetch("/me", {
         credentials: "include",
       });
-      const data = await res.json();
+      console.log("ME:", JSON.stringify(data));
       console.log("checkAuth response:", data);
 
       if (data.authenticated) {
