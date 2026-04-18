@@ -5,7 +5,7 @@ function Comment({ slug, onCommentAdded }) {
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(false);
-  const API_BASE =  "http://localhost:8000";
+  const API_BASE = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     axios.get(`${API_BASE}/comments/${slug}`)
