@@ -8,7 +8,7 @@ function Post() {
   const { slug } = useParams();
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
-  const API_BASE = "http://localhost:8000";
+  const API_BASE = import.meta.env.VITE_API_URL;
 
   const fetchComments = () => {
     axios.get(`${API_BASE}/comments/${slug}`)
