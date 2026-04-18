@@ -38,4 +38,8 @@ async def options_handler(request: Request):
         }
     )
 
+@app.get("/ping")
+def ping():
+    return {"status": "ok"}
+
 
