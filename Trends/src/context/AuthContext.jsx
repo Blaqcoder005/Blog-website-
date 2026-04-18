@@ -9,7 +9,7 @@ export function AuthProvider({ children }) {
 
   const checkAuth = async () => {
     try {
-      const res = await fetch("http://localhost:8000/me", {
+      const res = await apiFetch("/me", {
         credentials: "include",
       });
       const data = await res.json();
