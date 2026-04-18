@@ -9,9 +9,8 @@ export function AuthProvider({ children }) {
   const API_BASE = import.meta.env.VITE_API_URL;
 
   const checkAuth = async () => {
-    setLoading(true); // add this line
     try {
-      const res = await apiFetch(`${API_BASE}/me`, {
+      const res = await apiFetch("/me", {
         credentials: "include",
       });
       const data = await res.json();
@@ -40,4 +39,3 @@ export function AuthProvider({ children }) {
 }
 
 export const useAuth = () => useContext(AuthContext);
-
