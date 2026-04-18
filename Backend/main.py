@@ -9,7 +9,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://blog-website-2twh.onrender.com"],
+    allow_origins=["https://news-trends-exnw.onrender.com"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
