@@ -9,7 +9,7 @@ function CreatePost() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const API_BASE = "http://localhost:8000";
+  const API_BASE = import.meta.env.VITE_API_URL;
 
   const handleSubmit = () => {
     if (!title.trim() || !content.trim()) {
