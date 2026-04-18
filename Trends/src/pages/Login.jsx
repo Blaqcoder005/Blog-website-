@@ -29,10 +29,10 @@ export default function Login() {
         body: formData,
         credentials: "include",
       });
-      console.log("API BASE:", import.meta.env.VITE_API_URL)
 
       if (res.ok) {
         await checkAuth();
+        console.log("Auth checked, navigating...");
         navigate("/");
         return;
       }
