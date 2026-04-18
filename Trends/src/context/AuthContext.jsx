@@ -14,6 +14,7 @@ export function AuthProvider({ children }) {
         credentials: "include",
       });
       const data = await res.json();
+      console.log("checkAuth response:", data);
 
       if (data.authenticated) {
         setUser(data);
